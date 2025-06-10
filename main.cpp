@@ -218,19 +218,19 @@ void RBTree::rbPrint(int type){
 }
 
 int main(){
-  RBTree tree(20);
-  tree.RBinsert(new Node(15));
-  tree.RBinsert(new Node(25));
-  tree.RBinsert(new Node(10));
-  tree.RBinsert(new Node(18));
+  RBTree* tree = new RBTree(20);
+  tree->RBinsert(new Node(15));
+  tree->RBinsert(new Node(25));
+  tree->RBinsert(new Node(10));
+  tree->RBinsert(new Node(18));
 
   cout<<"PreOrder: ";
-  tree.rbPrint(preOrder);
+  tree->rbPrint(preOrder);
 
   cout<<"InOrder: ";
-  tree.rbPrint(inOrder);
+  tree->rbPrint(inOrder);
 
   cout<<"PostOrder: ";
-  tree.rbPrint(postOrder);
+  tree->rbPrint(postOrder);
   cout<<endl;
 }
