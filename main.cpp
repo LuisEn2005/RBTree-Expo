@@ -133,23 +133,10 @@ Node* RBTree::RBsearch(int k) {
     }
     return x; // Devuelve el nodo encontrado o NIL si no se encontró
 }
-void RBTree::RBdelete(int key) {
-  Node* z = root;
-  Node* x, *y;
-
-  // Buscar el nodo a eliminar
-  while (z && z->key != key) {
-    if (key < z->key)
-      z = z->children[0];
-    else
-      z = z->children[1];
-  }
-
-  if(!z){
-    cout << "El nodo con clave " << key << " no existe en el árbol." << endl;
-    return;
-  }
-
+void RBTree::RBdelete(int k) {
+  Node* z = RBsearch(k);
+  Node* x, *y; 
+  if(z == nullptr) return;
   y = z;
   Color originalColor = y->color;
 
@@ -362,7 +349,6 @@ int main(){
   tree->RBinsert(new Node(25));
   tree->RBinsert(new Node(10));
   tree->RBinsert(new Node(18));
-
   tree->RBPrint(preOrder);
   
   tree->RBdelete(15);
