@@ -181,7 +181,9 @@ void RBTree::transplant(Node* u, Node* v) {
   else{
     u->parent->children[1] = v;
   }
-  v->parent = u->parent;
+  if(v){
+    v->parent = u->parent;
+  }
 }
 
 Node* RBTree::minimum(Node* node) {
