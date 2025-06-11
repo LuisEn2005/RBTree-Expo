@@ -29,31 +29,22 @@ class RBTree{
     void RBinsert(Node*);
     void leftRotate(Node*);
     void rightRotate(Node*);
-    void rbPrint(int);
-    void deleteSubtree(Node*);
-    RBTree(int);
+    void RBPrint(int);
+    void RBdelete(int);
+    RBTree();
     ~RBTree();
   private:
     void RBinsertFixUp(Node*);
+    void RBdeleteFixup(Node*);
+    void transplant(Node*, Node*);
+    Node* minimum(Node*);
     void printPreOrder(Node*);
     void printInOrder(Node*);
     void printPostOrder(Node*);
 };
 
-RBTree::RBTree(int key){
-  root = new Node(key);
-  root->color = BLACK;
-}
-
-RBTree::~RBTree() {
-  deleteSubtree(root);
-}
-
-void RBTree::deleteSubtree(Node* node) {
-  if (!node) return;
-  deleteSubtree(node->children[0]);
-  deleteSubtree(node->children[1]);
-  delete node;
+RBTree::RBTree(){
+  root = nullptr;
 }
 
 int RBTree::isRootBlack(){
@@ -130,26 +121,156 @@ void RBTree::RBinsertFixUp(Node* node) {
   root->color = BLACK; // Asegurarse de que la raíz sea negra
 }
 
-void RBTree::leftRotate(Node* x) {
+void RBTree::RBdelete(int key) {
+  Node* z = root;
+  Node* x, *y;
+
+  // Buscar el nodo a eliminar
+  while (z && z->key != key) {
+    if (key < z->key)
+      z = z->children[0];
+    else
+      z = z->children[1];
+  }
+
+  if(!z){
+    cout << "El nodo con clave " << key << " no existe en el árbol." << endl;
+    return;
+  }
+
+  y = z;
+  Color originalColor = y->color;
+
+  if(!z->children[0]){
+    x = z->children[1];
+    transplant(z, z->children[1]);
+  } else if (!z->children[1]) {
+    x = z->children[0];
+    transplant(z, z->children[0]);
+  } else {
+    y = minimum(z->children[1]);
+    originalColor = y->color;
+    x = y->children[1];
+    if (y->parent == z) {
+      if (x) x->parent = y;
+    } else {
+      transplant(y, y->children[1]);
+      y->children[1] = z->children[1];
+      y->children[1]->parent = y;
+    }
+    transplant(z, y);
+    y->children[0] = z->children[0];
+    y->children[0]->parent = y;
+    y->color = z->color;
+  }
+
+  delete z;
+
+  if(originalColor == BLACK){
+    RBdeleteFixup(x);
+  }
+}
+
+void RBTree::transplant(Node* u, Node* v) {
+  if(!u->parent){
+    root = v;
+  }
+  else if(u == u->parent->children[0]){
+    u->parent->children[0] = v;
+  }
+  else{
+    u->parent->children[1] = v;
+  }
+  v->parent = u->parent;
+}
+
+Node* RBTree::minimum(Node* node) {
+  while (node->children[0]) {
+    node = node->children[0];
+  }
+  return node;
+}
+
+void RBTree::RBdeleteFixup(Node* x) {
+  while (x != root && (!x || x->color == BLACK)) {
+    if (x == x->parent->children[0]) {
+      Node* w = x->parent->children[1];
+      if (w && w->color == RED) {
+        w->color = BLACK;
+        x->parent->color = RED;
+        leftRotate(x->parent);
+        w = x->parent->children[1];
+      }
+      if ((!w->children[0] || w->children[0]->color == BLACK) &&
+          (!w->children[1] || w->children[1]->color == BLACK)) {
+        if (w) w->color = RED;
+        x = x->parent;
+      } else {
+        if (!w->children[1] || w->children[1]->color == BLACK) {
+          if (w->children[0]) w->children[0]->color = BLACK;
+          if (w) w->color = RED;
+          rightRotate(w);
+          w = x->parent->children[1];
+        }
+        if (w) w->color = x->parent->color;
+        x->parent->color = BLACK;
+        if (w && w->children[1]) w->children[1]->color = BLACK;
+        leftRotate(x->parent);
+        x = root;
+      }
+    } else {
+      // Simétrico al caso anterior
+      Node* w = x->parent->children[0];
+      if (w && w->color == RED) {
+        w->color = BLACK;
+        x->parent->color = RED;
+        rightRotate(x->parent);
+        w = x->parent->children[0];
+      }
+      if ((!w->children[0] || w->children[0]->color == BLACK) &&
+          (!w->children[1] || w->children[1]->color == BLACK)) {
+        if (w) w->color = RED;
+        x = x->parent;
+      } else {
+        if (!w->children[0] || w->children[0]->color == BLACK) {
+          if (w->children[1]) w->children[1]->color = BLACK;
+          if (w) w->color = RED;
+          leftRotate(w);
+          w = x->parent->children[0];
+        }
+        if (w) w->color = x->parent->color;
+        x->parent->color = BLACK;
+        if (w && w->children[0]) w->children[0]->color = BLACK;
+        rightRotate(x->parent);
+        x = root;
+      }
+    }
+  }
+  if (x) x->color = BLACK;
+}
+
+void RBTree::leftRotate(Node* x){
   Node* y = x->children[1];
   x->children[1] = y->children[0];
-  if (y->children[0]) {
-      y->children[0]->parent = x;
+  if(y->children[0]){
+    y->children[0]->parent = x;
   }
   y->parent = x->parent;
-  if (!x->parent) {
-      root = y;
-  } else if (x == x->parent->children[0]) {
-      x->parent->children[0] = y;
-  } else {
-      x->parent->children[1] = y;
+  if(!x->parent){
+    root = y;
+  }
+  else if(x == x->parent->children[0]){
+    x->parent->children[0] = y;
+  }
+  else{
+    x->parent->children[1] = y;
   }
   y->children[0] = x;
   x->parent = y;
 }
 
 
-void RBTree::rightRotate(Node* y) {
+void RBTree::rightRotate(Node* y){
   assert(y != nullptr);
   Node* x = y->children[0];
   assert(x != nullptr);
@@ -159,12 +280,14 @@ void RBTree::rightRotate(Node* y) {
 
   // Paso 1: x toma la posición de y
   x->parent = z;
-  if (z == nullptr) {
-      root = x;
-  } else if (y == z->children[0]) {
-      z->children[0] = x;
-  } else {
-      z->children[1] = x;
+  if (z == nullptr){
+    root = x;
+  }
+  else if(y == z->children[0]){
+    z->children[0] = x;
+  }
+  else{
+    z->children[1] = x;
   }
 
   // Paso 2: y pasa a ser hijo derecho de x
@@ -173,44 +296,45 @@ void RBTree::rightRotate(Node* y) {
 
   // Paso 3: El subárbol B pasa a ser hijo izquierdo de y
   y->children[0] = B;
-  if (B != nullptr) {
-      B->parent = y;
+  if(B != nullptr){
+    B->parent = y;
   }
 }
 
-
-
-void RBTree::printPreOrder(Node* node) {
-  if (node == nullptr) return;
+void RBTree::printPreOrder(Node* node){
+  if(node == nullptr) return;
   cout << node->key << " "<< node->color << " ";
   printPreOrder(node->children[0]);
   printPreOrder(node->children[1]);
 }
 
-void RBTree::printInOrder(Node* node) {
-  if (node == nullptr) return;
+void RBTree::printInOrder(Node* node){
+  if(node == nullptr) return;
   printInOrder(node->children[0]);
   cout << node->key << " "<< node->color << " ";
   printInOrder(node->children[1]);
 }
 
-void RBTree::printPostOrder(Node* node) {
-  if (node == nullptr) return;
+void RBTree::printPostOrder(Node* node){
+  if(node == nullptr) return;
   printPostOrder(node->children[0]);
   printPostOrder(node->children[1]);
   cout << node->key << " "<< node->color << " ";
 }
 
-void RBTree::rbPrint(int type){
-  switch(type) { 
+void RBTree::RBPrint(int type){
+  switch(type){ 
     case preOrder:
       printPreOrder(root);
+      cout<<endl;
       break;
     case inOrder:
       printInOrder(root);
+      cout<<endl;
       break;
     case postOrder:
       printPostOrder(root);
+      cout<<endl;
       break;
     default:
       cout << "Tipo de recorrido no soportado" << endl;  
@@ -218,19 +342,15 @@ void RBTree::rbPrint(int type){
 }
 
 int main(){
-  RBTree* tree = new RBTree(20);
+  RBTree* tree = new RBTree();
+  tree->RBinsert(new Node(20));
   tree->RBinsert(new Node(15));
   tree->RBinsert(new Node(25));
   tree->RBinsert(new Node(10));
   tree->RBinsert(new Node(18));
 
-  cout<<"PreOrder: ";
-  tree->rbPrint(preOrder);
-
-  cout<<"InOrder: ";
-  tree->rbPrint(inOrder);
-
-  cout<<"PostOrder: ";
-  tree->rbPrint(postOrder);
-  cout<<endl;
+  tree->RBPrint(preOrder);
+  
+  tree->RBdelete(20);
+  tree->RBPrint(preOrder);
 }
