@@ -31,6 +31,7 @@ class RBTree{
     void rightRotate(Node*);
     void RBPrint(int);
     void RBdelete(int);
+    Node* RBsearch(int);
     RBTree();
     ~RBTree();
   private:
@@ -121,6 +122,17 @@ void RBTree::RBinsertFixUp(Node* node) {
   root->color = BLACK; // Asegurarse de que la raíz sea negra
 }
 
+Node* RBTree::RBsearch(int k) {
+    Node* x = root; // Comienza la búsqueda desde la raíz
+    while (x != nullptr && k != x->key) { // Mientras no se alcance NIL y no se encuentre la clave
+        if (k < x->key) {
+            x = x->children[0]; // Moverse al hijo izquierdo si la clave buscada es menor
+        } else {
+            x = x->children[1]; // Moverse al hijo derecho si la clave buscada es mayor
+        }
+    }
+    return x; // Devuelve el nodo encontrado o NIL si no se encontró
+}
 void RBTree::RBdelete(int key) {
   Node* z = root;
   Node* x, *y;
@@ -353,6 +365,6 @@ int main(){
 
   tree->RBPrint(preOrder);
   
-  tree->RBdelete(20);
+  tree->RBdelete(15);
   tree->RBPrint(preOrder);
 }
